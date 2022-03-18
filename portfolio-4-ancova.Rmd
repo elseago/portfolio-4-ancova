@@ -1,0 +1,107 @@
+---
+title: "portfolio-4-ancova"
+author: "Elayna Seago"
+date: "3/13/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r load-libraries}
+
+library(readxl)
+library(psych)
+library(tidyverse)
+library(afex)
+library(emmeans)
+library(dplyr)
+library(car)
+library(rstatix)
+
+Old <- read_excel("Old_with_DSC-MU.xlsx")
+```
+
+
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+```{r make-pid-a-factor}
+Old$PID<-as.factor(Old$PID)
+Old$Block_type<-as.factor(Old$Block_type)
+Old$Shift_type<-as.factor(Old$Shift_type)
+```
+
+```{r summary}
+summary(Old)
+```
+
+```{r means-and-sd}
+   Old %>%
+            group_by(Block_type , Shift_type) %>%  
+            summarise(mean_RT = mean(RT),
+            sd_RT = sd(RT))
+```
+
+
+```{r box-plot-block-type}
+boxplot(RT ~ Block_type,
+data = Old)
+```
+
+```{r box-plot-shift-type}
+boxplot(RT ~ Shift_type,
+data = Old)
+```
+
+
+
+```{r}
+leveneTest (RT ~ Block_type , data = Old)
+leveneTest(RT ~ Shift_type ,  data = Old)
+```
+
+
+
+# Now for the ANCOVA
+
+# first, copy my old ANOVA
+```{r}
+Old.aov.2 <- aov_car(RT ~ Block_type*Shift_type+ Error(PID/Block_type*Shift_type), data=Old,
+                     anova_table = list(es = "pes"))
+
+Old.aov.2
+```
+
+# Then do anova with aov_ez- this is just to make sure I'm doing the ez version correctly
+```{r}
+old.aov.3 <-aov_ez("PID" ,
+                   "RT",
+                   Old ,
+                   between = NULL ,
+                   within = c("Block_type" , "Shift_type"))
+
+old.aov.3
+```
+
+#Now, do ANCOVA by simply adding my covariate into aov_ez model
+
+```{r}
+old.aov.4 <-aov_ez("PID" ,
+                   "RT",
+                   Old ,
+                   between = NULL ,
+                   within = c("Block_type" , "Shift_type"),
+                   covariate = "DSC_madeup" , 
+                   factorize = FALSE)
+
+old.aov.4
+```
+
