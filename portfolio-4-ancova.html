@@ -275,18 +275,12 @@ data = Old)</code></pre>
 ##       Df F value Pr(&gt;F)
 ## group  1  0.3639 0.5483
 ##       70</code></pre>
-<p>#website tutorial i used said type 3 ss should be used for ancova-true? # This is one method of doing an ANCOVA</p>
-<pre class="r"><code>anova_test(data = Old, formula = RT ~ DSC_madeup + Block_type + Shift_type + Block_type:Shift_type , type = 3, detailed = TRUE) </code></pre>
-<pre><code>## Coefficient covariances computed by hccm()</code></pre>
-<pre><code>## ANOVA Table (type III tests)
-## 
-##                  Effect        SSn     SSd DFn DFd      F     p p&lt;.05   ges
-## 1           (Intercept) 767722.292 4351466   1  67 11.821 0.001     * 0.150
-## 2            DSC_madeup 346480.733 4351466   1  67  5.335 0.024     * 0.074
-## 3            Block_type   8930.393 4351466   1  67  0.138 0.712       0.002
-## 4            Shift_type 438784.326 4351466   1  67  6.756 0.011     * 0.092
-## 5 Block_type:Shift_type 161810.302 4351466   1  67  2.491 0.119       0.036</code></pre>
-<p>#This is another method of doing an ANCOVA- Anthony’s suggestion # first, copy my old ANOVA</p>
+</div>
+<div id="now-for-the-ancova" class="section level1">
+<h1>Now for the ANCOVA</h1>
+</div>
+<div id="first-copy-my-old-anova" class="section level1">
+<h1>first, copy my old ANOVA</h1>
 <pre class="r"><code>Old.aov.2 &lt;- aov_car(RT ~ Block_type*Shift_type+ Error(PID/Block_type*Shift_type), data=Old,
                      anova_table = list(es = &quot;pes&quot;))
 
@@ -301,8 +295,8 @@ Old.aov.2</code></pre>
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;+&#39; 0.1 &#39; &#39; 1</code></pre>
 </div>
-<div id="then-do-anova-with-aov_ez--this-is-just-to-make-sure-im-always-getting-the-same-thingdoing-the-ez-version-correctly" class="section level1">
-<h1>Then do anova with aov_ez- this is just to make sure I’m always getting the same thing/doing the ez version correctly</h1>
+<div id="then-do-anova-with-aov_ez--this-is-just-to-make-sure-im-doing-the-ez-version-correctly" class="section level1">
+<h1>Then do anova with aov_ez- this is just to make sure I’m doing the ez version correctly</h1>
 <pre class="r"><code>old.aov.3 &lt;-aov_ez(&quot;PID&quot; ,
                    &quot;RT&quot;,
                    Old ,
@@ -319,27 +313,28 @@ old.aov.3</code></pre>
 ## 3 Block_type:Shift_type 1, 17 10157.39 15.93 *** .033   &lt;.001
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;+&#39; 0.1 &#39; &#39; 1</code></pre>
-<p>#Now, do ANCOVA by simply adding my covariate in</p>
+<p>#Now, do ANCOVA by simply adding my covariate into aov_ez model #I am confused by this warning- “numerical variable not centered on 0”</p>
 <pre class="r"><code>old.aov.4 &lt;-aov_ez(&quot;PID&quot; ,
                    &quot;RT&quot;,
                    Old ,
                    between = NULL ,
                    within = c(&quot;Block_type&quot; , &quot;Shift_type&quot;),
-                   covariate = &quot;DSC_madeup&quot;)</code></pre>
-<pre><code>## Converting to factor: DSC_madeup</code></pre>
-<pre><code>## Contrasts set to contr.sum for the following variables: DSC_madeup</code></pre>
+                   covariate = &quot;DSC_madeup&quot; , 
+                   factorize = FALSE)</code></pre>
+<pre><code>## Warning: Numerical variables NOT centered on 0 (i.e., likely bogus results):
+## DSC_madeup</code></pre>
 <pre class="r"><code>old.aov.4</code></pre>
 <pre><code>## Anova Table (Type 3 tests)
 ## 
 ## Response: RT
-##                             Effect    df      MSE       F  ges p.value
-## 1                       DSC_madeup 15, 2 10045.21 25.18 * .972    .039
-## 2                       Block_type  1, 2 23827.13    0.10 .021    .782
-## 3            DSC_madeup:Block_type 15, 2 23827.13    1.13 .785    .568
-## 4                       Shift_type  1, 2 10758.45 34.82 * .773    .028
-## 5            DSC_madeup:Shift_type 15, 2 10758.45    1.48 .685    .476
-## 6            Block_type:Shift_type  1, 2 10387.81 13.95 + .568    .065
-## 7 DSC_madeup:Block_type:Shift_type 15, 2 10387.81    0.97 .580    .618
+##                             Effect    df       MSE      F   ges p.value
+## 1                       DSC_madeup 1, 16 216734.39   1.60  .075    .224
+## 2                       Block_type 1, 16  24512.29   2.59  .015    .127
+## 3            DSC_madeup:Block_type 1, 16  24512.29   2.38  .013    .143
+## 4                       Shift_type 1, 16  14573.48 4.41 +  .015    .052
+## 5            DSC_madeup:Shift_type 1, 16  14573.48   1.88  .006    .189
+## 6            Block_type:Shift_type 1, 16  10664.65   0.01 &lt;.001    .927
+## 7 DSC_madeup:Block_type:Shift_type 1, 16  10664.65   0.19 &lt;.001    .668
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;+&#39; 0.1 &#39; &#39; 1</code></pre>
 </div>

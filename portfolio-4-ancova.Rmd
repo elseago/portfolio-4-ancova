@@ -68,9 +68,18 @@ leveneTest (RT ~ Block_type , data = Old)
 leveneTest(RT ~ Shift_type ,  data = Old)
 ```
 
+This option matches the output I get in spss if i do "UNIANOVA RT BY Block_type Shift_type WITH DSC_madeup
+/Method=SSTYPE(3)
+/INTERCEPT=INCLUDE
+/CRITERIA=ALPHA(0.05)
+/DESIGN=DSC_madeup Block_type Shift_type Block_type*Shift_type
+```{r}
+anova_test(data = Old, formula = RT ~ DSC_madeup + Block_type + Shift_type + Block_type:Shift_type , type = 3 , detailed = TRUE)
+```
 
 
-# Now for the ANCOVA
+
+# Now for the ANCOVA using aov_ez
 
 # first, copy my old ANOVA
 ```{r}
@@ -92,7 +101,7 @@ old.aov.3
 ```
 
 #Now, do ANCOVA by simply adding my covariate into aov_ez model
-
+#I am confused by this warning- "numerical variable not centered on 0" do I need to center here?
 ```{r}
 old.aov.4 <-aov_ez("PID" ,
                    "RT",
@@ -100,8 +109,37 @@ old.aov.4 <-aov_ez("PID" ,
                    between = NULL ,
                    within = c("Block_type" , "Shift_type"),
                    covariate = "DSC_madeup" , 
-                   factorize = FALSE)
+                   observed = NULL ,
+                   fun_aggregate = NULL ,
+                   type = afex_options("type") ,
+                   factorize = FALSE ,
+                   check_contrasts = afex_options("check_contrasts"),
+                   return = afex_options("return_aov"),
+                   anova_table = list(),
+                   include_aov = afex_options("include_aov"),
+                   print.formula = FALSE)
 
 old.aov.4
 ```
+
+```{r}
+
+#Old$DSC_madeup <- scale(Old$DSC_madeup , center = TRUE , scale = FALSE)
+Old$DSC_madeup <- as.numeric(Old$DSC_madeup)
+Old$Block_type <- as.factor(Old$Block_type)
+Old$Shift_type <- as.factor(Old$Shift_type)
+Old$RT <- as.numeric(Old$RT)
+
+old.aov.5 <-aov_ez("PID" ,
+                   "RT",
+                   Old ,
+                   between = NULL ,
+                   within = c("Block_type" , "Shift_type"),
+                   #anova_table = list(es = "pes") ,
+                   covariate = "DSC_madeup" , 
+                   factorize = FALSE)
+
+old.aov.5
+```
+
 
