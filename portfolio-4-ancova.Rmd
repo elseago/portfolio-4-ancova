@@ -26,7 +26,7 @@ library(dplyr)
 library(car)
 library(rstatix)
 
-Old <- read_excel("Old_with_DSC-MU.xlsx")
+Old <- read_excel("AllOldDSC.xlsx")
 ```
 
 
@@ -35,9 +35,26 @@ Note that the `echo = FALSE` parameter was added to the code chunk to prevent pr
 
 ```{r make-pid-a-factor}
 Old$PID<-as.factor(Old$PID)
-Old$Block_type<-as.factor(Old$Block_type)
-Old$Shift_type<-as.factor(Old$Shift_type)
+#Old$Block_type<-as.factor(Old$Block_type)
+#Old$Shift_type<-as.factor(Old$Shift_type)
+Old$RT<-as.numeric(Old$RT)
+Old$DSC<-as.numeric(Old$DSC)
+Old$DSC_centered<-as.numeric(Old$DSC_centered)
+
 ```
+
+
+```{r}
+Old$Block_type <- factor(Old$Block_type,
+                               levels = c(1,2),
+                               labels = c("Mostly Hold Block", "Mostly Shift Block")) 
+
+Old$Shift_type <-factor(Old$Shift_type,
+                                  levels = c(1,2),
+                                  labels = c("Hold Cue", "Shift Cue")) 
+```
+
+
 
 ```{r summary}
 summary(Old)
@@ -68,13 +85,52 @@ leveneTest (RT ~ Block_type , data = Old)
 leveneTest(RT ~ Shift_type ,  data = Old)
 ```
 
-This option matches the output I get in spss if i do "UNIANOVA RT BY Block_type Shift_type WITH DSC_madeup
-/Method=SSTYPE(3)
-/INTERCEPT=INCLUDE
-/CRITERIA=ALPHA(0.05)
-/DESIGN=DSC_madeup Block_type Shift_type Block_type*Shift_type
+
+correlations
 ```{r}
-anova_test(data = Old, formula = RT ~ DSC_madeup + Block_type + Shift_type + Block_type:Shift_type , type = 3 , detailed = TRUE)
+
+
+Old %>% 
+ggplot(aes(x = RT*1000 , y = DSC))+
+  geom_point()+
+  facet_wrap(~Block_type + Shift_type)+
+  stat_smooth(method = "lm")+
+  labs(x = "Response Time (ms)" , y = "Digist Symbol Substitution Score")
+
+
+```
+
+
+```{r}
+library(ggpubr)
+```
+
+This is extra stuff I did for my thesis
+```{#r}
+hmh <- Old[Old$Shift_type == 1 & Old$Block_type == 1,]
+smh <- Old[Old$Shift_type == 2 & Old$Block_type == 1,]
+hms <- Old[Old$Shift_type == 1 & Old$Block_type == 2,]
+sms <- Old[Old$Shift_type == 2 & Old$Block_type == 2,]
+```
+
+
+
+```{r}
+#  cor.test(hmh$RT , hmh$DSC)
+```
+
+```{r}
+#cor.test(smh$RT , smh$DSC)
+```
+
+```{r}
+#cor.test(hms$RT , hms$DSC)
+```
+
+
+
+```{r}
+#  cor.test(sms$RT , sms$DSC)
 ```
 
 
@@ -108,12 +164,12 @@ old.aov.4 <-aov_ez("PID" ,
                    Old ,
                    between = NULL ,
                    within = c("Block_type" , "Shift_type"),
-                   covariate = "DSC_madeup" , 
+                   covariate = "DSC_centered" , 
                    observed = NULL ,
                    fun_aggregate = NULL ,
                    type = afex_options("type") ,
                    factorize = FALSE ,
-                   check_contrasts = afex_options("check_contrasts"),
+                   check_contrasts = FALSE,
                    return = afex_options("return_aov"),
                    anova_table = list(),
                    include_aov = afex_options("include_aov"),
@@ -122,10 +178,12 @@ old.aov.4 <-aov_ez("PID" ,
 old.aov.4
 ```
 
+
+It was unclear to me how many specifications I needed so I tried with what I thought were the requirements and with everything to make sure I got the same answers.
 ```{r}
 
 #Old$DSC_madeup <- scale(Old$DSC_madeup , center = TRUE , scale = FALSE)
-Old$DSC_madeup <- as.numeric(Old$DSC_madeup)
+Old$DSC_centered <- as.numeric(Old$DSC_centered)
 Old$Block_type <- as.factor(Old$Block_type)
 Old$Shift_type <- as.factor(Old$Shift_type)
 Old$RT <- as.numeric(Old$RT)
@@ -136,7 +194,7 @@ old.aov.5 <-aov_ez("PID" ,
                    between = NULL ,
                    within = c("Block_type" , "Shift_type"),
                    #anova_table = list(es = "pes") ,
-                   covariate = "DSC_madeup" , 
+                   covariate = "DSC_centered" , 
                    factorize = FALSE)
 
 old.aov.5
